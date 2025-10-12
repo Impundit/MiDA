@@ -44,7 +44,7 @@ for f in range(3):
     outfile2 = open(eventlog+".txt", 'a')
 
 
-    model = load_model("models/" + eventlog + "model_optuna_" + str(f) + "_layer.h5")
+    model = load_model("models/" + eventlog + "model_hpopt_" + str(f) + "_layer.h5")
 
     list_cat_view_train = []
     for col in cat_view:

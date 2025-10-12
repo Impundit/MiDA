@@ -112,7 +112,7 @@ class MiDA:
             self.best_numparameters = model.count_params()
             self.best_time = end_time - start_time
             print("BEST SCORE", self.best_score)
-            self.best_model.save("models/" + self._eventlog + "model_optuna_" + str(self.n_fold) + "_layer.h5")
+            self.best_model.save("models/" + self._eventlog + "model_hpopt_" + str(self.n_fold) + "_layer.h5")
 
         outfile2.write(str(score)+";"+str(len(h.history['loss']))+";"+str(model.count_params())+";"+str(end_time - start_time)+";"+ str(cfg['lstmsize1'])+";"+str(cfg['lstmsize2'])+";"+str(cfg['batch_size'])+";"+str(cfg['learning_rate_init'])+"\n")
         return score
