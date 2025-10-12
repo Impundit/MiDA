@@ -71,13 +71,31 @@ class MiDA:
         layer_l = BatchNormalization()(layer_l)
 
         out = Dense(self.n_classes, activation='softmax')(layer_l)
-        opt = Nadam(learning_rate=cfg['learning_rate_init'], beta_1=0.9, beta_2=0.999, epsilon=1e-08, schedule_decay=0.004,
-                    clipvalue=3)
+        opt = self._create_optimizer(cfg)
         model = Model(inputs=self.Union(list_cat_view_in, list_num_view_in), outputs=out)
         model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['acc'])
         model.summary()
 
         return model
+
+    @staticmethod
+    def _create_optimizer(cfg):
+        """Build the optimizer used for training.
+
+        The legacy implementation attempted to pass the ``schedule_decay`` argument to
+        ``tf.keras.optimizers.Nadam``.  This option has been removed in recent
+        TensorFlow releases which triggered a ``ValueError`` during hyper-parameter
+        optimisation.  By centralising the construction in this helper we can ensure
+        only supported keyword arguments are forwarded to Nadam.
+        """
+
+        return Nadam(
+            learning_rate=cfg['learning_rate_init'],
+            beta_1=0.9,
+            beta_2=0.999,
+            epsilon=1e-08,
+            clipvalue=3,
+        )
 
 
     def fit_and_score(self, cfg):
