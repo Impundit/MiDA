@@ -160,7 +160,7 @@ class ReadLog:
             if self._eventlog == 'bpi12w_complete' or self._eventlog == 'bpi12_all_complete' or self._eventlog == 'bpi12_work_all':
                 df_train['resource'] = 'Res' + df_train['resource'].astype(str)
                 df_test['resource'] = 'Res' + df_test['resource'].astype(str)
-            full_df = df_train.append(df_test)
+            full_df = pd.concat([df_train, df_test], ignore_index=True)
             cont_trace = full_df['case'].value_counts(dropna=False)
             max_trace = max(cont_trace)
             mean_trace = int(round(np.mean(cont_trace)))
