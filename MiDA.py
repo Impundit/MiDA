@@ -1,8 +1,7 @@
 import logging
 import numpy as np
-from ConfigSpace.hyperparameters import CategoricalHyperparameter, UniformFloatHyperparameter
-from smac.configspace import ConfigurationSpace
-from smac.scenario.scenario import Scenario
+import optuna
+from optuna.pruners import HyperbandPruner
 from sklearn import preprocessing
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Nadam
@@ -11,7 +10,6 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from time import perf_counter
 import pickle
-from smac.facade.hyperband_facade import HB4AC
 
 class MiDA:
     def __init__(self, eventlog):
@@ -114,12 +112,12 @@ class MiDA:
             self.best_numparameters = model.count_params()
             self.best_time = end_time - start_time
             print("BEST SCORE", self.best_score)
-            self.best_model.save("models/"+self._eventlog+"model_smac_"+str(self.n_fold)+"_layer.h5")
+            self.best_model.save("models/" + self._eventlog + "model_optuna_" + str(self.n_fold) + "_layer.h5")
 
         outfile2.write(str(score)+";"+str(len(h.history['loss']))+";"+str(model.count_params())+";"+str(end_time - start_time)+";"+ str(cfg['lstmsize1'])+";"+str(cfg['lstmsize2'])+";"+str(cfg['batch_size'])+";"+str(cfg['learning_rate_init'])+"\n")
         return score
 
-    def smac_opt(self):
+    def optimize(self):
         self.load_col()
         for f in range(3):
             self.n_fold = f
@@ -135,30 +133,6 @@ class MiDA:
 
             logger = logging.getLogger(self._eventlog + "_fold_" + str(f))
             logging.basicConfig(level=logging.INFO)
-
-            # Build Configuration Space which defines all parameters and their ranges.
-            # To illustrate different parameter types,
-            # we use continuous, integer and categorical parameters.
-            cs = ConfigurationSpace()
-
-            # We can add multiple hyperparameters at once:
-            lstmsize1 = CategoricalHyperparameter("lstmsize1", [50, 75, 100])
-            lstmsize2 = CategoricalHyperparameter("lstmsize2", [50, 75, 100])
-            batch_size = CategoricalHyperparameter("batch_size", [32, 64, 128, 256, 512, 1024])
-            learning_rate_init = UniformFloatHyperparameter('learning_rate_init', 0.00001, 0.01, default_value=0.001,
-                                                            log=True)
-            cs.add_hyperparameters([lstmsize1, lstmsize2, batch_size, learning_rate_init])
-
-            # SMAC scenario object
-            # Scenario object
-            scenario = Scenario({"run_obj": "quality",  # we optimize quality (alternatively runtime)
-                                 "runcount-limit": 20,  # max. number of function evaluations;
-                                 "cs": cs,  # configuration space
-                                 "deterministic": "true",
-                                 "abort_on_first_run_crash": "false",
-                                 "output_dir": self._eventlog
-
-                                 })
 
             self.list_cat_view_train = []
             for col in self._cat_view:
@@ -205,21 +179,24 @@ class MiDA:
             self.n_classes = len(df_labels)
 
             max_iters = 200
-            # print("Default Value: %.2f" % def_value)
-            intensifier_kwargs = {'initial_budget': 20, 'max_budget': max_iters, 'eta': 3}
-            # Optimize, using a SMAC-object
-            print("Optimizing! Depending on your machine, this might take a few minutes.")
-            smac = HB4AC(scenario=scenario,
-                         rng=np.random.RandomState(42),
-                         tae_runner=self.fit_and_score,
-                         intensifier_kwargs=intensifier_kwargs
-                         )
 
-            # Start optimization
-            try:
-                incumbent = smac.optimize()
-            finally:
-                incumbent = smac.solver.incumbent
-            inc_value = smac.get_tae_runner().run(config=incumbent, instance='1', budget=max_iters, seed=0)[1]
+            def objective(trial):
+                cfg = {
+                    "lstmsize1": trial.suggest_categorical("lstmsize1", [50, 75, 100]),
+                    "lstmsize2": trial.suggest_categorical("lstmsize2", [50, 75, 100]),
+                    "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512, 1024]),
+                    "learning_rate_init": trial.suggest_float("learning_rate_init", 0.00001, 0.01, log=True),
+                }
+                score = self.fit_and_score(cfg)
+                return score
+
+            print("Optimizing! Depending on your machine, this might take a few minutes.")
+            pruner = HyperbandPruner(min_resource=20, max_resource=max_iters, reduction_factor=3)
+            sampler = optuna.samplers.TPESampler(seed=42)
+            study = optuna.create_study(direction="minimize", pruner=pruner, sampler=sampler)
+            study.optimize(objective, n_trials=20)
+
+            inc_value = study.best_value
             print(inc_value)
             print("Optimized Value: %.4f" % inc_value)
+            print("Best Parameters:", study.best_params)
