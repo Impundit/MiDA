@@ -160,7 +160,10 @@ class MiDA:
             integer_encoded = label_encoder.fit_transform(df_labels)
             integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
 
-            onehot_encoder = preprocessing.OneHotEncoder(sparse=False)
+            try:
+                onehot_encoder = preprocessing.OneHotEncoder(sparse_output=False)
+            except TypeError:
+                onehot_encoder = preprocessing.OneHotEncoder(sparse=False)
             onehot_encoder.fit(integer_encoded)
             onehot_encoded = onehot_encoder.transform(integer_encoded)
 
