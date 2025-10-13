@@ -1,3 +1,4 @@
+import inspect
 import numpy as np
 from sklearn import preprocessing
 from sklearn.metrics import classification_report, precision_recall_fscore_support
@@ -71,7 +72,12 @@ for f in range(3):
     integer_encoded = label_encoder.fit_transform(df_labels)
     integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
 
-    onehot_encoder = preprocessing.OneHotEncoder(sparse=False)
+    encoder_kwargs = {}
+    if 'sparse_output' in inspect.signature(preprocessing.OneHotEncoder).parameters:
+        encoder_kwargs['sparse_output'] = False
+    else:
+        encoder_kwargs['sparse'] = False
+    onehot_encoder = preprocessing.OneHotEncoder(**encoder_kwargs)
     onehot_encoder.fit(integer_encoded)
     onehot_encoded = onehot_encoder.transform(integer_encoded)
 
