@@ -72,6 +72,8 @@ for f in range(3):
     integer_encoded = label_encoder.fit_transform(df_labels)
     integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
 
+    label_mapping = {idx: label for idx, label in enumerate(label_encoder.classes_)}
+
     encoder_kwargs = {}
     if 'sparse_output' in inspect.signature(preprocessing.OneHotEncoder).parameters:
         encoder_kwargs['sparse_output'] = False
@@ -97,14 +99,30 @@ for f in range(3):
     y_a_test = np.argmax(Y_test, axis=1)
     preds_a = np.argmax(preds_a, axis=1)
 
-    precision, recall, fscore, _ = precision_recall_fscore_support(Y_test_int, preds_a, average='macro',
-                                                                   pos_label=None)
+    precision, recall, fscore, _ = precision_recall_fscore_support(
+        Y_test_int, preds_a, average='macro', pos_label=None)
     auc_score_macro = multiclass_roc_auc_score(Y_test_int, preds_a, average="macro")
     prauc_score_macro = multiclass_pr_auc_score(Y_test_int, preds_a, average="macro")
 
+    labels = list(range(n_classes))
+    target_names = [str(label_mapping[idx]) for idx in labels]
+    report = classification_report(
+        Y_test_int,
+        preds_a,
+        labels=labels,
+        target_names=target_names,
+        digits=3,
+        zero_division=0,
+    )
 
-    print(classification_report(Y_test_int, preds_a, digits=3))
-    outfile2.write(classification_report(Y_test_int, preds_a, digits=3))
+    mapping_text = "Label mapping (index -> original label):\n" + "\n".join(
+        f"{idx}: {label}" for idx, label in label_mapping.items()
+    ) + "\n"
+
+    print(mapping_text)
+    print(report)
+    outfile2.write(mapping_text)
+    outfile2.write(report)
     outfile2.write('\nAUC: ' + str(auc_score_macro))
     outfile2.write('\nPRAUC: '+ str(prauc_score_macro))
     outfile2.write('\n')
