@@ -48,7 +48,7 @@ class MiDA:
         list_num_view_in = []
         for c in self._cat_view:
             num_view = np.load("fold/" + self._eventlog + "/" + self._eventlog + '_' + c + '_' + str(0) + "_info.npy")
-            size_view = num_view + 1 // 2
+            size_view = (num_view + 1) // 2
             input_cat = Input(shape=(self._seq_length,), dtype='int32', name=c)
             list_cat_view_in.append(input_cat)
             x = Embedding(output_dim=size_view, input_dim=num_view + 1, input_length=self._seq_length)(input_cat)

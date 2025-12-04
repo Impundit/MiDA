@@ -8,7 +8,6 @@ def extract_metrics_from_file(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # استانداردسازی فاصله‌ها
     text = re.sub(r"[\r\n\t]+", " ", content)
     text = re.sub(r"\s+", " ", text)
 
@@ -16,7 +15,6 @@ def extract_metrics_from_file(file_path):
         m = re.search(pattern, text)
         return float(m.group(1)) if m else np.nan
 
-    # تلاش برای پیدا کردن macro avg یا weighted avg
     macro = re.search(r"macro avg\s+([0-9\.]+)\s+([0-9\.]+)\s+([0-9\.]+)", text)
     weighted = re.search(r"weighted avg\s+([0-9\.]+)\s+([0-9\.]+)\s+([0-9\.]+)", text)
 
@@ -27,10 +25,8 @@ def extract_metrics_from_file(file_path):
     else:
         precision = recall = fscore = np.nan
 
-    # استخراج accuracy با فرمت‌های مختلف
     accuracy = safe_find(r"accuracy\s*([0-9]*\.[0-9]+)") or safe_find(r"Accuracy[:=]?\s*([0-9]*\.[0-9]+)")
 
-    # استخراج AUC و PRAUC
     auc = safe_find(r"AUC[:=]\s*([0-9]*\.[0-9]+)")
     prauc = safe_find(r"PRAUC[:=]\s*([0-9]*\.[0-9]+)")
 
@@ -61,10 +57,9 @@ def summarize_results(eventlog_prefix):
     return df
 
 
-# 🔹 مثال اجرا:
-eventlog = "bpi12_all_complete"  # نام دیتاست
+eventlog = "bpi13_problems"  
 df_summary = summarize_results(eventlog)
 
 if df_summary is not None:
-    print("\n📊 جدول نهایی:")
+    print("\n جدول نهایی:")
     print(df_summary.to_string(index=False))

@@ -24,11 +24,12 @@ class ReadLog:
 
     def time_format(self, time_stamp):
         '''
-        :param time_stamp: oggetto timestamp
-        :return: converte l'oggetto timestamp utile in fase di calcolo dei tempi
+        :param time_stamp: timestamp object
+        :return: converts the timestamp object, useful during time-calculation
+
         '''
         try:
-            date_format_str = '%Y/%m/%d %H:%M:%S.%f%z'
+            date_format_str = '%Y/%m/%d %H:%M:%S.%f%z'   # همراه با منطقه زمانی
             conversion = datetime.strptime(time_stamp, date_format_str)
         except:
             date_format_str = '%Y/%m/%d %H:%M:%S.%f'
