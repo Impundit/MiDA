@@ -1,17 +1,5 @@
-Label mapping (index -> original label):
-0: 1
-1: 2
-2: 3
-3: 4
-4: 5
-5: 6
-6: 7
-7: 8
-8: 9
-9: 10
-10: 11
-11: 12
-12: 13
+
+=== Fold 0 ===
               precision    recall  f1-score   support
 
            1      0.408     0.384     0.396      1405
@@ -32,22 +20,10 @@ Label mapping (index -> original label):
    macro avg      0.436     0.427     0.428     19400
 weighted avg      0.727     0.731     0.728     19400
 
-AUC: 0.700959999668371
-PRAUC: 0.2967526857320071
-Label mapping (index -> original label):
-0: 1
-1: 2
-2: 3
-3: 4
-4: 5
-5: 6
-6: 7
-7: 8
-8: 9
-9: 10
-10: 11
-11: 12
-12: 13
+AUC: 0.701
+PRAUC: 0.297
+
+=== Fold 1 ===
               precision    recall  f1-score   support
 
            1      0.398     0.357     0.377      1349
@@ -68,22 +44,10 @@ Label mapping (index -> original label):
    macro avg      0.415     0.409     0.411     19005
 weighted avg      0.728     0.732     0.730     19005
 
-AUC: 0.7081424478140698
-PRAUC: 0.31003874066627446
-Label mapping (index -> original label):
-0: 1
-1: 2
-2: 3
-3: 4
-4: 5
-5: 6
-6: 7
-7: 8
-8: 9
-9: 10
-10: 11
-11: 12
-12: 13
+AUC: 0.708
+PRAUC: 0.310
+
+=== Fold 2 ===
               precision    recall  f1-score   support
 
            1      0.417     0.365     0.389      1451
@@ -104,5 +68,5 @@ Label mapping (index -> original label):
    macro avg      0.406     0.397     0.400     19574
 weighted avg      0.721     0.726     0.723     19574
 
-AUC: 0.701588926478708
-PRAUC: 0.3040288581076506
+AUC: 0.702
+PRAUC: 0.304

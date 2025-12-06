@@ -3,8 +3,11 @@ import numpy as np
 import pandas as pd
 import glob
 
+# -----------------------------------
+# Extract metrics from one file
+# -----------------------------------
 def extract_metrics_from_file(file_path):
-    """Read one result file and extract metrics robustly: Accuracy, Precision, Recall, F1, AUC, PRAUC"""
+
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -15,6 +18,7 @@ def extract_metrics_from_file(file_path):
         m = re.search(pattern, text)
         return float(m.group(1)) if m else np.nan
 
+    # macro or weighted averages
     macro = re.search(r"macro avg\s+([0-9\.]+)\s+([0-9\.]+)\s+([0-9\.]+)", text)
     weighted = re.search(r"weighted avg\s+([0-9\.]+)\s+([0-9\.]+)\s+([0-9\.]+)", text)
 
@@ -25,20 +29,21 @@ def extract_metrics_from_file(file_path):
     else:
         precision = recall = fscore = np.nan
 
-    accuracy = safe_find(r"accuracy\s*([0-9]*\.[0-9]+)") or safe_find(r"Accuracy[:=]?\s*([0-9]*\.[0-9]+)")
-
+    accuracy = safe_find(r"accuracy\s*([0-9]*\.[0-9]+)")
     auc = safe_find(r"AUC[:=]\s*([0-9]*\.[0-9]+)")
     prauc = safe_find(r"PRAUC[:=]\s*([0-9]*\.[0-9]+)")
 
-    print(f"📄 {file_path} → acc={accuracy}, prec={precision}, rec={recall}, f1={fscore}, auc={auc}, prauc={prauc}")
     return accuracy, precision, recall, fscore, auc, prauc
 
 
+# -----------------------------------
+# Summarize folds for one dataset
+# -----------------------------------
 def summarize_results(eventlog_prefix):
-    """Summarize mean and std across folds"""
+
+    # Find all result text files for this dataset
     all_files = sorted(glob.glob(f"{eventlog_prefix}*.txt"))
     if not all_files:
-        print(f"⚠️ هیچ فایل خروجی با پیشوند '{eventlog_prefix}' یافت نشد.")
         return None
 
     metrics = [extract_metrics_from_file(f) for f in all_files]
@@ -48,18 +53,30 @@ def summarize_results(eventlog_prefix):
     std = np.nanstd(arr, axis=0)
 
     labels = ["Accuracy", "Precision", "Recall", "Fscore", "AUC", "AUCPR"]
+
     df = pd.DataFrame({
         "Metric": labels,
         "Mean": mean.round(3),
         "Std": std.round(3),
-        "Final": [f"{m:.3f}±{s:.3f}" for m, s in zip(mean, std)]
+        "Final": [f"{m:.3f} ± {s:.3f}" for m, s in zip(mean, std)]
     })
+
     return df
 
 
-eventlog = "bpi13_problems"  
-df_summary = summarize_results(eventlog)
+# -----------------------------------
+# Run for all datasets
+# -----------------------------------
+eventlogs = [
+    "receipt",
+    "bpi12_all_complete",
+    "bpi13_incidents",
+    "bpi13_problems"
+]
 
-if df_summary is not None:
-    print("\n جدول نهایی:")
-    print(df_summary.to_string(index=False))
+for ev in eventlogs:
+    df_summary = summarize_results(ev)
+    if df_summary is not None:
+        print(f"\n===== Final Results: {ev} =====")
+        print(df_summary.to_string(index=False))
+        print()
